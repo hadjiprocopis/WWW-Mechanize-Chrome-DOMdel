@@ -1,85 +1,216 @@
-WWW-Mechanize-Chrome-DOMdel
+NAME
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+    WWW::Mechanize::Chrome::DOMdel - delete an element from the DOM
 
-A README file is required for CPAN modules since CPAN extracts the README
-file from a module distribution so that people browsing the archive
-can use it to get an idea of the module's uses. It is usually a good idea
-to provide version information here so that people can decide whether
-fixes for the module are worth downloading.
+VERSION
 
+    Version 0.01
 
-INSTALLATION
+SYNOPSIS
 
-To install this module, run the following commands:
+    Deletes one or more elements from the DOM which is currently loaded on
+    a WWW::Mechanize::Chrome object, matched by one of the following
+    specifiers or a combination:
 
-	perl Makefile.PL
-	make
-	make test
-	make install
+      * Element class name (as in <div class='a-class-name' ...>).
 
-SUPPORT AND DOCUMENTATION
+      * Element type (as in <div ...>, i.e. all the div elements).
 
-After installing, you can find documentation for this module with the
-perldoc command.
+      * Element name (as in <input type='checkbox' name='aname' ...>), only
+      for some HTML constructs (form etc.)
 
-    perldoc WWW::Mechanize::Chrome::DOMdel
+      * Element id (as in <div id='an-element-id' ...>). NOTE: this matches
+      only one item.
 
-You can also look for information at:
+    If a combination of the above specifiers is used, then the resultant
+    set can be either an intersection or a union by using the parameter ||
+    => 1
 
-    RT, CPAN's request tracker (report bugs here)
-        https://rt.cpan.org/NoAuth/Bugs.html?Dist=WWW-Mechanize-Chrome-DOMdel
+    Here are some usage scenaria:
 
-    AnnoCPAN, Annotated CPAN documentation
-        http://annocpan.org/dist/WWW-Mechanize-Chrome-DOMdel
+        use WWW::Mechanize::Chrome::DOMdel qw/remove_element_from_DOM/;
+    
+        my $mechobj = WWW::Mechanize::Chrome->new();
+        $mechobj->get('https://www.xyz.com');
+    
+        # remove from the DOM just fetched these elements:
+        my $ret = remove_element_from_DOM({
+           'mech-obj' => $mechobj,
+           # remove all elements whose classname is this:
+           'element-classname' => 'slanted-paragraph',
+           # *OR* their type is this:
+           'element-type' => 'p',
+           # specifies that we should use the union of the above sets
+           || => 1
+           # this says to remove all elements whose classname
+           # is such-and-such AND element type is such-and-such
+           # || => 0 # this is the default mode btw
+        });
+        # or specify an element id
+        $ret = remove_element_from_DOM({
+           'mech-obj' => $mechobj,
+           'element-id' => 'paragraph-123'
+        });
+        # check if success
+        if( $ret > 0 ){ print "success, $ret elements deleted.\n" }
+        elsif( $ret == 0 ){ print "no element was matched with your criteria.\n" }
+        elsif( $ret == -1 ){ print "one of your specifiers has failed.\n" }
+        else { print "something is very wrong: javascript has failed.\n" }
 
-    CPAN Ratings
-        https://cpanratings.perl.org/d/WWW-Mechanize-Chrome-DOMdel
+EXPORT
 
-    Search CPAN
-        https://metacpan.org/release/WWW-Mechanize-Chrome-DOMdel
+    the sub to remove an element from the DOM
 
+        remove_element_from_DOM()
+
+    and the flag to denote verbosity (default is 0, no verbosity)
+
+        $VERBOSE_DOMdel
+
+SUBROUTINES/METHODS
+
+ remove_element_from_DOM($params)
+
+    It removes an element from the DOM currently loaded on the
+    parameters-specified WWW::Mechanize::Chrome object. The params are:
+
+      * mech-obj : supply a WWW::Mechanize::Chrome, required
+
+      * class-name : delete all DOM elements matching this class name
+
+      * element-type : delete all DOM elements matching this element type
+
+      * element-id : delete the DOM element matching this element id
+
+    One of the last 3 parameters is required. The combination of
+    element-type and class-name is also valid and the resulting set will be
+    calculated using either a union (OR) or an intersection (AND).
+    Intersection (AND) is the default mode.
+
+    To change to the union (OR) mode use the parameter
+
+        || => 1
+
+    Note: the union/intersection applies to the first two element
+    selectors. It does not apply to element-id, which is theoretically,
+    unique in the DOM.
+
+    Here is an example:
+
+        use WWW::Mechanize::Chrome::DOMdel qw/remove_element_from_DOM/;
+    
+        my $mechobj = WWW::Mechanize::Chrome->new();
+        $mechobj->get('https://www.xyz.com');
+    
+        # remove from the DOM just fetched these elements:
+        my $ret = remove_element_from_DOM({
+           'mech-obj' => $mechobj,
+           # remove all elements whose classname is this:
+           'element-classname' => 'slanted-paragraph',
+           # *OR* their type is this:
+           'element-type' => 'p',
+           # specifies that we should use the union of the above sets
+           || => 1
+           # this says to remove all elements whose classname
+           # is such-and-such AND element type is such-and-such
+           # || => 0 # this is the default mode btw
+        });
+
+    RETURN VALUE:
+
+      * -2 if javascript to remove the element(s) has failed
+
+      * -1 if one or more of the specified selectors did not match, for
+      example no element matched the specified element-type. However, other
+      selectors (if specified) may have matched something.
+
+      * the number of elements deleted which can be zero or more, success.
+
+AUTHOR
+
+    Andreas Hadjiprocopis, <bliako at cpan.org>
+
+BUGS
+
+    Please report any bugs or feature requests to
+    bug-www-mechanize-chrome-domdel at rt.cpan.org, or through the web
+    interface at
+    https://rt.cpan.org/NoAuth/ReportBug.html?Queue=WWW-Mechanize-Chrome-DOMdel.
+    I will be notified, and then you'll automatically be notified of
+    progress on your bug as I make changes.
+
+SUPPORT
+
+    You can find documentation for this module with the perldoc command.
+
+        perldoc WWW::Mechanize::Chrome::DOMdel
+
+    You can also look for information at:
+
+      * WWW::Mechanize::Chrome
+
+      * RT: CPAN's request tracker (report bugs here)
+
+      https://rt.cpan.org/NoAuth/Bugs.html?Dist=WWW-Mechanize-Chrome-DOMdel
+
+      * AnnoCPAN: Annotated CPAN documentation
+
+      http://annocpan.org/dist/WWW-Mechanize-Chrome-DOMdel
+
+      * CPAN Ratings
+
+      https://cpanratings.perl.org/d/WWW-Mechanize-Chrome-DOMdel
+
+      * Search CPAN
+
+      https://metacpan.org/release/WWW-Mechanize-Chrome-DOMdel
+
+DEDICATIONS
+
+    Almaz
+
+ACKNOWLEDGEMENTS
+
+    CORION for publishing WWW::Mechanize::Chrome
 
 LICENSE AND COPYRIGHT
 
-Copyright (C) 2019 Andreas Hadjiprocopis
+    Copyright 2019 Andreas Hadjiprocopis.
 
-This program is free software; you can redistribute it and/or modify it
-under the terms of the the Artistic License (2.0). You may obtain a
-copy of the full license at:
+    This program is free software; you can redistribute it and/or modify it
+    under the terms of the the Artistic License (2.0). You may obtain a
+    copy of the full license at:
 
-L<http://www.perlfoundation.org/artistic_license_2_0>
+    http://www.perlfoundation.org/artistic_license_2_0
 
-Any use, modification, and distribution of the Standard or Modified
-Versions is governed by this Artistic License. By using, modifying or
-distributing the Package, you accept this license. Do not use, modify,
-or distribute the Package, if you do not accept this license.
+    Any use, modification, and distribution of the Standard or Modified
+    Versions is governed by this Artistic License. By using, modifying or
+    distributing the Package, you accept this license. Do not use, modify,
+    or distribute the Package, if you do not accept this license.
 
-If your Modified Version has been derived from a Modified Version made
-by someone other than you, you are nevertheless required to ensure that
-your Modified Version complies with the requirements of this license.
+    If your Modified Version has been derived from a Modified Version made
+    by someone other than you, you are nevertheless required to ensure that
+    your Modified Version complies with the requirements of this license.
 
-This license does not grant you the right to use any trademark, service
-mark, tradename, or logo of the Copyright Holder.
+    This license does not grant you the right to use any trademark, service
+    mark, tradename, or logo of the Copyright Holder.
 
-This license includes the non-exclusive, worldwide, free-of-charge
-patent license to make, have made, use, offer to sell, sell, import and
-otherwise transfer the Package with respect to any patent claims
-licensable by the Copyright Holder that are necessarily infringed by the
-Package. If you institute patent litigation (including a cross-claim or
-counterclaim) against any party alleging that the Package constitutes
-direct or contributory patent infringement, then this Artistic License
-to you shall terminate on the date that such litigation is filed.
+    This license includes the non-exclusive, worldwide, free-of-charge
+    patent license to make, have made, use, offer to sell, sell, import and
+    otherwise transfer the Package with respect to any patent claims
+    licensable by the Copyright Holder that are necessarily infringed by
+    the Package. If you institute patent litigation (including a
+    cross-claim or counterclaim) against any party alleging that the
+    Package constitutes direct or contributory patent infringement, then
+    this Artistic License to you shall terminate on the date that such
+    litigation is filed.
 
-Disclaimer of Warranty: THE PACKAGE IS PROVIDED BY THE COPYRIGHT HOLDER
-AND CONTRIBUTORS "AS IS' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
-THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-PURPOSE, OR NON-INFRINGEMENT ARE DISCLAIMED TO THE EXTENT PERMITTED BY
-YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
-CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
-CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    Disclaimer of Warranty: THE PACKAGE IS PROVIDED BY THE COPYRIGHT HOLDER
+    AND CONTRIBUTORS "AS IS' AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES.
+    THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+    PURPOSE, OR NON-INFRINGEMENT ARE DISCLAIMED TO THE EXTENT PERMITTED BY
+    YOUR LOCAL LAW. UNLESS REQUIRED BY LAW, NO COPYRIGHT HOLDER OR
+    CONTRIBUTOR WILL BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, OR
+    CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THE PACKAGE,
+    EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
